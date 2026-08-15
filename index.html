@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>♡ KAWAII TRAINING LOG ♡</title>
+<style>
+:root{--lav:#b99be8;--lavp:#f5effc;--pink:#efa7c5;--pinkp:#fff1f7;--ink:#51485a;--muted:#968c9c;--line:#e8dfee;--bg:#fcf9ff}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#fbf8ff,#fff8fb);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif}
+.wrap{max-width:720px;margin:auto;padding:16px 12px 48px}.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:14px;box-shadow:0 7px 24px #76548d12}
+h1{font-size:22px;margin:0 0 5px}.sub{font-size:12px;color:var(--muted);line-height:1.6}.title{font-size:15px;font-weight:700;margin-bottom:13px}
+input,textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:10px;font-size:14px;color:var(--ink);background:#fff;outline:0}input:focus,textarea:focus{border-color:var(--lav);box-shadow:0 0 0 3px var(--lavp)}
+.date{margin-top:14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}
+.exercise{border:1px solid var(--line);border-radius:16px;padding:13px;margin-bottom:11px;background:linear-gradient(135deg,#fff,#fcf9ff)}
+.ehead{display:flex;gap:7px;margin-bottom:9px}.ehead input{font-weight:700}.btn{border:0;border-radius:11px;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.add{background:var(--lavp);color:#765c99}.save{background:linear-gradient(135deg,#b99be8,#d7a8dc);color:#fff}.remove{background:#f7f3f8;color:#978d9d;padding:7px 9px}.danger{background:#fff0f3;color:#b35e79}
+table{width:100%;border-collapse:collapse}th{font-size:10px;color:var(--muted);font-weight:500;padding-bottom:5px}td{padding:3px}td:first-child{text-align:center;width:26px;color:var(--muted);font-size:11px}.setadd{margin-top:7px;border:1px dashed #d7c4e9;background:#faf6ff;color:#8064a1}
+textarea{min-height:85px;resize:vertical}.buttons{display:flex;gap:8px;flex-wrap:wrap}.empty{text-align:center;color:var(--muted);font-size:12px;padding:10px}
+.history{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:11px 0;border-bottom:1px solid #f1ebf4}.history:last-child{border:0}.hdate{font-weight:700;font-size:13px}.detail{font-size:11px;color:var(--muted);margin-top:3px}.actions{display:flex;gap:5px}.tiny{font-size:11px;padding:7px 9px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);background:#554a5b;color:#fff;padding:10px 16px;border-radius:999px;font-size:12px;opacity:0;transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:520px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="wrap">
+<header class="card"><h1>🎀 きょうのトレーニング</h1><div class="sub">できたことをかわいく残そう ♡<br>筋トレ・有酸素・メモをまとめて記録。</div><input id="date" class="date" type="date"></header>
+<section class="card"><div class="title">💪 筋トレメニュー</div><div id="exercises"></div><button class="btn add" onclick="addExercise()">＋ 種目を追加</button></section>
+<section class="card"><div class="title">🏠 YouTube宅トレ</div>
+<div id="homeWorkouts"></div>
+<button class="btn add" onclick="addHomeWorkout()">＋ 宅トレ動画を追加</button>
+</section>
+<section class="card"><div class="title">🏃 有酸素・時間</div><div class="grid">
+<div><label>有酸素の種類</label><input id="cardioType" placeholder="例：ウォーキング"></div>
+<div><label>有酸素（分）</label><input id="cardioMin" type="number" min="0" placeholder="45"></div>
+<div><label>トレーニング合計（分）</label><input id="totalMin" type="number" min="0" placeholder="65"></div>
+<div><label>消費カロリー（任意）</label><input id="calories" type="number" min="0" placeholder="入力しなくてもOK"></div>
+</div></section>
+<section class="card"><div class="title">🌷 今日のメモ</div><textarea id="note" placeholder="例：脚が軽かった／次回は重量アップしたい"></textarea><div class="buttons" style="margin-top:12px"><button class="btn save" onclick="save()">♡ 記録を保存</button><button class="btn add" onclick="resetForm()">入力をリセット</button></div></section>
+<section class="card"><div class="title">📖 トレーニング履歴</div><div id="history"></div></section>
+</div><div id="toast" class="toast"></div>
+<script>
+const KEY="kawaii_training_log_v3";let ex=[],home=[];
+const homeParts=["お腹","脚","お尻","腕","全身","ストレッチ","その他"];
+const $=id=>document.getElementById(id),today=()=>new Date().toISOString().slice(0,10);$("date").value=today();
+function addExercise(name="",sets=[{w:"",r:""},{w:"",r:""},{w:"",r:""}]){ex.push({name,sets});render()}
+function addHomeWorkout(v={title:"",url:"",min:"",part:"お腹",status:"できた",note:""}){home.push(v);renderHome()}
+function removeHome(i){home.splice(i,1);renderHome()}
+function renderHome(){const b=$("homeWorkouts");if(!home.length){b.innerHTML='<div class="empty">まだ宅トレ動画がないよ ♡</div>';return}b.innerHTML=home.map((h,i)=>`<div class="exercise"><div class="ehead"><input class="h-title" value="${esc(h.title)}" placeholder="動画名（例：毎日プランク3分）"><button class="btn remove" onclick="removeHome(${i})">削除</button></div><div class="grid"><div><label>YouTube URL（任意）</label><input class="h-url" value="${esc(h.url)}" placeholder="https://youtu.be/..."></div><div><label>動画時間（分）</label><input class="h-min" type="number" min="0" value="${esc(h.min)}" placeholder="10"></div><div><label>部位</label><select class="h-part">${homeParts.map(x=>`<option ${x===h.part?"selected":""}>${x}</option>`).join("")}</select></div><div><label>達成度</label><select class="h-status"><option ${h.status==="できた"?"selected":""}>できた</option><option ${h.status==="途中まで"?"selected":""}>途中まで</option><option ${h.status==="断念"?"selected":""}>断念</option></select></div></div><div style="margin-top:10px"><label>メモ</label><input class="h-note" value="${esc(h.note)}" placeholder="例：お腹に効いた！またやりたい"></div></div>`).join("")}
+function addSet(i){ex[i].sets.push({w:"",r:""});render()}function removeSet(i,j){if(ex[i].sets.length>1)ex[i].sets.splice(j,1);render()}function removeEx(i){ex.splice(i,1);render()}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+function syncHome(){document.querySelectorAll("#homeWorkouts .exercise").forEach((b,i)=>{home[i].title=b.querySelector(".h-title").value;home[i].url=b.querySelector(".h-url").value;home[i].min=b.querySelector(".h-min").value;home[i].part=b.querySelector(".h-part").value;home[i].status=b.querySelector(".h-status").value;home[i].note=b.querySelector(".h-note").value})}
+function sync(){document.querySelectorAll("#exercises .exercise").forEach((b,i)=>{ex[i].name=b.querySelector(".ename").value;b.querySelectorAll("tbody tr").forEach((tr,j)=>{ex[i].sets[j].w=tr.querySelector(".weight").value;ex[i].sets[j].r=tr.querySelector(".reps").value})})}
+function render(){let b=$("exercises");if(!ex.length){b.innerHTML='<div class="empty">まだ種目がないよ ♡</div>';return}b.innerHTML=ex.map((e,i)=>`<div class="exercise"><div class="ehead"><input class="ename" value="${esc(e.name)}" placeholder="種目名（例：レッグプレス）"><button class="btn remove" onclick="removeEx(${i})">削除</button></div><table><thead><tr><th>#</th><th>重量（kg）</th><th>回数</th><th></th></tr></thead><tbody>${e.sets.map((s,j)=>`<tr><td>${j+1}</td><td><input class="weight" type="number" min="0" step=".1" value="${esc(s.w)}" placeholder="kg"></td><td><input class="reps" type="number" min="0" value="${esc(s.r)}" placeholder="回"></td><td><button class="btn remove" onclick="removeSet(${i},${j})">×</button></td></tr>`).join("")}</tbody></table><button class="btn setadd" onclick="addSet(${i})">＋ セット追加</button></div>`).join("")}
+function records(){return JSON.parse(localStorage.getItem(KEY)||"[]")}
+function save(){sync();syncHome();let r={id:Date.now(),date:$("date").value||today(),exercises:ex.filter(e=>e.name.trim()),homeWorkouts:home.filter(h=>h.title.trim()),cardioType:$("cardioType").value,cardioMin:$("cardioMin").value,totalMin:$("totalMin").value,calories:$("calories").value,note:$("note").value};let rs=records().filter(x=>x.date!==r.date);rs.unshift(r);localStorage.setItem(KEY,JSON.stringify(rs));history();toast("保存したよ ♡")}
+function load(id){let r=records().find(x=>x.id===id);if(!r)return;$("date").value=r.date;$("cardioType").value=r.cardioType||"";$("cardioMin").value=r.cardioMin||"";$("totalMin").value=r.totalMin||"";$("calories").value=r.calories||"";$("note").value=r.note||"";ex=JSON.parse(JSON.stringify(r.exercises||[]));home=JSON.parse(JSON.stringify(r.homeWorkouts||[]));render();renderHome();scrollTo({top:0,behavior:"smooth"})}
+function del(id){if(!confirm("この記録を削除する？"))return;localStorage.setItem(KEY,JSON.stringify(records().filter(x=>x.id!==id)));history();toast("削除したよ")}
+function resetForm(){$("date").value=today();$("cardioType").value="";$("cardioMin").value="";$("totalMin").value="";$("calories").value="";$("note").value="";ex=[];home=[];render();renderHome()}
+function history(){let b=$("history"),rs=records().sort((a,b)=>b.date.localeCompare(a.date));if(!rs.length){b.innerHTML='<div class="empty">まだ記録がないよ ♡</div>';return}b.innerHTML=rs.map(r=>{let n=(r.exercises||[]).length,s=(r.exercises||[]).reduce((a,e)=>a+(e.sets||[]).length,0),d=[n?`${n}種目`:null,s?`${s}セット`:null,r.cardioType&&r.cardioMin?`${esc(r.cardioType)} ${r.cardioMin}分`:null].filter(Boolean).join(" ・ ")||"記録あり";return `<div class="history"><div><div class="hdate">${r.date.replaceAll("-","/")}</div><div class="detail">${d}</div></div><div class="actions"><button class="btn add tiny" onclick="load(${r.id})">見る</button><button class="btn danger tiny" onclick="del(${r.id})">削除</button></div></div>`}).join("")}
+function toast(m){let t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1700)}
+addExercise("レッグプレス");addExercise("アーム系");render();renderHome();history();
+</script></body></html>
